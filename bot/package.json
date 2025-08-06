@@ -1,0 +1,32 @@
+{
+  "name": "SimpleFlow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Probot app",
+  "author": "The SimpleFlow Project",
+  "license": "ISC",
+  "homepage": "https://github.com//",
+  "keywords": [
+    "probot",
+    "github",
+    "probot-app"
+  ],
+  "scripts": {
+    "start": "probot run ./index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "probot": "^13.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "nock": "^14.0.0-beta.5",
+    "smee-client": "^2.0.0"
+  },
+  "engines": {
+    "node": ">= 18"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
