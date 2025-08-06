@@ -9,10 +9,43 @@ module.exports = (app) => {
   app.on('pull_request.opened', async (context) => {
     const prNum = context.payload.pull_request.number;
     const fullName = context.payload.repository.full_name;
+    const headRef = context.payload.pull_request.head.ref;
 
     app.log.info(`Detected new PR #${prNum} in ${fullName}`);
 
     app.log.info(context.payload.pull_request)
+
+    try {
+      // Fetch list of changed files
+      const { data: files } = await context.octokit.rest.pulls.listFiles({
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        pull_number: prNum,
+      });
+
+      for (const file of files) {
+        const filePath = file.filename;
+        app.log.info(`Changed file: ${filePath}`);
+        try {
+          const { data } = await context.octokit.rest.repos.getContent({
+            owner: context.payload.repository.owner.login,
+            repo: context.payload.repository.name,
+            path: filePath,
+            ref: headRef,
+          });
+          if (!Array.isArray(data)) {
+            const content = Buffer.from(data.content, 'base64').toString('utf8');
+            app.log.info(`--- Content of ${filePath} ---\n${content}`);
+          } else {
+            app.log.info(`Skipped directory: ${filePath}`);
+          }
+        } catch (err) {
+          app.log.error({ err, file: filePath }, `Failed to fetch content for ${filePath}`);
+        }
+      }
+    } catch (err) {
+      app.log.error({ err }, `Failed to list changed files for PR #${prNum}`);
+    }
   });
 
   // Opens a PR every time someone installs your app for the first time
