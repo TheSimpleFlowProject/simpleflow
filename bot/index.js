@@ -15,6 +15,12 @@ module.exports = (app) => {
 
     app.log.info(context.payload.pull_request)
 
+    await context.octokit.issues.createComment(
+      context.issue({
+        body: "Accessing feeds...",
+      })
+    );
+
     try {
       // Fetch list of changed files
       const { data: files } = await context.octokit.rest.pulls.listFiles({
@@ -22,6 +28,14 @@ module.exports = (app) => {
         repo: context.payload.repository.name,
         pull_number: prNum,
       });
+
+      await context.octokit.issues.createComment(
+        context.issue({
+          body: `Analysing ${files.length} file(s)...
+          \nPlease wait, it won't take so much time to process.\n
+          `,
+        })
+      );
 
       for (const file of files) {
         const filePath = file.filename;
@@ -41,10 +55,20 @@ module.exports = (app) => {
           }
         } catch (err) {
           app.log.error({ err, file: filePath }, `Failed to fetch content for ${filePath}`);
+          await context.octokit.issues.createComment(
+            context.issue({
+              body: `Emmm, it seems that I struggled to get the content of ${filePath}.`,
+            })
+          );
         }
       }
     } catch (err) {
       app.log.error({ err }, `Failed to list changed files for PR #${prNum}`);
+      await context.octokit.issues.createComment(
+        context.issue({
+          body: `That's weird, I failed to list changed files for this PR :'(`,
+        })
+      );
     }
   });
 
