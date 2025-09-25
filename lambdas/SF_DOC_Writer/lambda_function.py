@@ -25,13 +25,15 @@ def doc_generator(id):
     You are a senior software engineer at Amazon. Your task is to add inline documentation.
 
     Return the original file content with inline comments added. The comments should:
-    - Explain the role of each function and major code block.
-    - Clarify important logic decisions and exception handling.
-    - Be concise, technical, and helpful for future developers reading the code.
 
-    Tone: professional, technical, and developer-oriented.  
-    Output: Return only the fully commented code. Do not wrap it in Markdown or use triple backticks. The response must be plain code only.
+    Explain the role of each function and major code block.
 
+    Clarify important logic decisions and exception handling.
+
+    Be concise, technical, and helpful for future developers reading the code.
+
+    Tone: professional, technical, and developer-oriented.
+    Output: Return only the fully commented code. Do not wrap the response in Markdown, do not add triple backticks, and do not include any additional text. The response must be plain code only.
     File content:
     {file_content}
     """
@@ -66,7 +68,6 @@ def lambda_handler(event, context):
     if "file_id" not in body:
         return {
             'statusCode': 404,
-            # 'body': json.dumps('Hello from Lambda!')
             'body': "not found"
         }
     return {

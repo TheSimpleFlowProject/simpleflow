@@ -253,6 +253,7 @@ module.exports = (app) => {
             file_id: uniqueFileNameForDocs
           });
           logger.info(`Documentation generation completed for: ${filePath}`);
+          logger.info(`Documentation generation : ${documentedContent}`);
 
           // Define branch name based on file with timestamp to avoid conflicts
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-');

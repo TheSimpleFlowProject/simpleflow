@@ -58,7 +58,6 @@ def lambda_handler(event, context):
     if "summaries" not in body:
         return {
             'statusCode': 404,
-            # 'body': json.dumps('Hello from Lambda!')
             'body': "not found"
         }
     return {

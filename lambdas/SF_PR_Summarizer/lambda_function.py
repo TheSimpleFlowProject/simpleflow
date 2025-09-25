@@ -16,7 +16,7 @@ def doc_generator(id):
         s3_object = s3_client.get_object(Bucket=s3_bucket_name, Key=id)
         file_content = s3_object["Body"].read().decode("utf-8")
     except Exception as e:
-        print(f"Erreur lors de la lecture du fichier S3 : {e}")
+        print(f"Error: Could not read S3 file : {e}")
         exit()
 
     print(file_content)
@@ -65,7 +65,6 @@ def lambda_handler(event, context):
     if "file_id" not in body:
         return {
             'statusCode': 404,
-            # 'body': json.dumps('Hello from Lambda!')
             'body': "not found"
         }
     return {

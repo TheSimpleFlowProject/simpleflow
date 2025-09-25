@@ -97,7 +97,6 @@ def lambda_handler(event, context):
     if "content" not in body:
         return {
             'statusCode': 404,
-            # 'body': json.dumps('Hello from Lambda!')
             'body': "not found"
         }
 
