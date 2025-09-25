@@ -16,6 +16,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "axios": "^1.11.0",
     "probot": "^13.0.1"
   },
   "devDependencies": {
