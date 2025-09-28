@@ -53,7 +53,6 @@ class UrlLambdaService {
         statusText: error.response?.statusText
       });
 
-      // Enhance error message
       if (error.code === 'ECONNABORTED') {
         throw new Error(`Lambda function timeout after ${this.defaultTimeout}ms`);
       } else if (error.response) {

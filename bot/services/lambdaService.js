@@ -30,8 +30,8 @@ class LambdaService {
       const params = {
         FunctionName: functionName,
         Payload: JSON.stringify(payload),
-        InvocationType: options.invocationType || 'RequestResponse', // RequestResponse, Event, DryRun
-        LogType: options.logType || 'None', // None, Tail
+        InvocationType: options.invocationType || 'RequestResponse',
+        LogType: options.logType || 'None',
         ClientContext: options.clientContext || undefined,
         Qualifier: options.qualifier || '$LATEST'
       };
@@ -41,7 +41,6 @@ class LambdaService {
 
       const result = await this.lambda.invoke(params).promise();
       
-      // Parse the response payload
       let responsePayload = null;
       if (result.Payload) {
         try {
@@ -75,7 +74,6 @@ class LambdaService {
   }
 
   /**
-   * Invoke a Lambda function asynchronously (fire-and-forget)
    * @param {string} functionName - Name or ARN of the Lambda function
    * @param {Object} payload - Payload to send to the function
    * @param {Object} options - Additional options
@@ -121,7 +119,7 @@ class LambdaService {
   /**
    * List all Lambda functions in the account
    * @param {Object} options - Listing options
-   * @returns {Promise<Array>} - Array of function configurations
+   * @returns {Promise<Array>} - Array of function
    */
   async listFunctions(options = {}) {
     try {

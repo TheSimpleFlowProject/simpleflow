@@ -1,8 +1,8 @@
 const AWS = require('aws-sdk');
 const axios = require('axios');
 
-// Import Lambda service and utilities
-const UrlLambdaService = require('./services/urlLambdaService');
+// Import services and utilities
+const ApiGatewayService = require('./services/apiGatewayService');
 const lambdaConfig = require('./config/lambdaConfig');
 const { LambdaLogger, ErrorHandler } = require('./utils/lambdaErrors');
 
@@ -12,39 +12,41 @@ const s3 = new AWS.S3({
   region: 'eu-west-3'
 });
 
-// Initialize URL Lambda service
+// Initialize service layer
 const logger = new LambdaLogger({
   logLevel: process.env.LAMBDA_LOG_LEVEL || 'info',
   prefix: '[SimpleFlow]'
 });
 
-const urlLambdaService = new UrlLambdaService({
-  timeout: lambdaConfig.getConfig().defaultTimeout
-}, logger);
+// Initialize API Gateway service
+logger.info('Using API Gateway service');
 
-// Create URL-based function invokers
-const fileAnalysisInvoker = urlLambdaService.createUrlInvoker(
-  lambdaConfig.getLambdaUrl('fileAnalysis'),
+const apiGatewayConfig = lambdaConfig.getApiGatewayConfig();
+const serviceInstance = new ApiGatewayService(apiGatewayConfig, logger);
+
+// Create API Gateway-based function invokers
+const fileAnalysisInvoker = serviceInstance.createEndpointInvoker(
+  apiGatewayConfig.endpoints.fileAnalysis,
   { timeout: 60000 }
 );
 
-const summaryInvoker = urlLambdaService.createUrlInvoker(
-  lambdaConfig.getLambdaUrl('summary'),
+const summaryInvoker = serviceInstance.createEndpointInvoker(
+  apiGatewayConfig.endpoints.summary,
   { timeout: 90000 }
 );
 
-const documentationInvoker = urlLambdaService.createUrlInvoker(
-  lambdaConfig.getLambdaUrl('documentation'),
+const documentationInvoker = serviceInstance.createEndpointInvoker(
+  apiGatewayConfig.endpoints.documentation,
   { timeout: 120000 }
 );
 
-const issueCreationInvoker = urlLambdaService.createUrlInvoker(
-  lambdaConfig.getLambdaUrl('issueCreation'),
+const issueCreationInvoker = serviceInstance.createEndpointInvoker(
+  apiGatewayConfig.endpoints.issueCreation,
   { timeout: 30000 }
 );
 
-const issueUpdateInvoker = urlLambdaService.createUrlInvoker(
-  lambdaConfig.getLambdaUrl('issueUpdate'),
+const issueUpdateInvoker = serviceInstance.createEndpointInvoker(
+  apiGatewayConfig.endpoints.issueUpdate,
   { timeout: 30000 }
 );
 
@@ -67,7 +69,7 @@ async function uploadToS3({ fileName, fileContent, contentType = 'text/plain' })
     ACL: 'private',
   };
 
-  return s3.upload(params).promise(); // returns a promise
+  return s3.upload(params).promise();
 }
 
 /**
@@ -75,20 +77,30 @@ async function uploadToS3({ fileName, fileContent, contentType = 'text/plain' })
  * @param {import('probot').Probot} app
  */
 module.exports = (app) => {
-  // Validate Lambda service configuration on startup
+  // Validate API Gateway configuration on startup
   const validation = lambdaConfig.validateConfig();
   if (!validation.isValid) {
-    app.log.error('Lambda service configuration is invalid:', validation.errors);
-    throw new Error('Invalid Lambda configuration. Please check your environment variables.');
+    app.log.error('API Gateway configuration is invalid:', validation.errors);
+    throw new Error('Invalid API Gateway configuration. Please check your environment variables.');
   }
   
   if (validation.hasWarnings) {
-    app.log.warn('Lambda service configuration warnings:', validation.warnings);
+    app.log.warn('API Gateway configuration warnings:', validation.warnings);
   }
 
-  app.log.info('URL Lambda service initialized successfully');
-  app.log.info('Lambda service configuration:', urlLambdaService.getStatus());
-  app.log.info('Configured Lambda URLs:', Object.keys(lambdaConfig.getAllLambdaUrls()));
+  // Additional validation for API Gateway service
+  const apiValidation = serviceInstance.validateConfig();
+  if (!apiValidation.isValid) {
+    app.log.error('API Gateway service validation failed:', apiValidation.errors);
+    throw new Error('Invalid API Gateway service configuration. Please check your environment variables.');
+  }
+  
+  if (apiValidation.hasWarnings) {
+    app.log.warn('API Gateway service warnings:', apiValidation.warnings);
+  }
+
+  app.log.info('API Gateway service initialized successfully');
+  app.log.info('API Gateway service configuration:', serviceInstance.getStatus());
   app.on('pull_request.opened', async (context) => {
     const prNum = context.payload.pull_request.number;
     const fullName = context.payload.repository.full_name;
@@ -141,10 +153,10 @@ module.exports = (app) => {
             await uploadToS3({ fileName: uniqueFileName, fileContent: content });
             app.log.info(`Uploaded to S3 with unique name: ${uniqueFileName}`);
             
-            // Use URL Lambda service
+            // Use API Gateway service for file analysis
             logger.info(`Analyzing file: ${filePath}`);
             const result = await fileAnalysisInvoker({
-              file_id: uniqueFileName  // Use unique name for Lambda analysis
+              file_id: uniqueFileName  // Use unique name for analysis
             });
             history[filePath] = result;
             logger.info(`File analysis completed for: ${filePath}`);
@@ -168,7 +180,7 @@ module.exports = (app) => {
 
       const history_str = JSON.stringify(history, null, 2);
       
-      // Use URL Lambda service for summary generation
+      // Use API Gateway service for summary generation
       logger.info('Generating summary from analysis history');
       const summaryResponse = await summaryInvoker({
         summaries: history_str
@@ -247,7 +259,7 @@ module.exports = (app) => {
           await uploadToS3({ fileName: uniqueFileNameForDocs, fileContent: content });
           app.log.info(`Uploaded file for documentation: ${uniqueFileNameForDocs}`);
 
-          // Send file to Lambda for documentation generation using URL Lambda service
+          // Send file to API Gateway for documentation generation
           logger.info(`Generating documentation for: ${filePath}`);
           const documentedContent = await documentationInvoker({
             file_id: uniqueFileNameForDocs
@@ -392,7 +404,6 @@ The documentation was automatically generated using AI analysis of the code stru
       } catch (err) {
         app.log.error({ err, file: filePath }, `Failed to process ${filePath}`);
         
-        // Provide more detailed error information
         let errorMessage = `Failed to create documentation for \`${filePath}\`.`;
         
         if (err.message.includes('Lambda')) {
@@ -434,17 +445,12 @@ The documentation was automatically generated using AI analysis of the code stru
 
     for (const repository of context.payload.repositories) {
       const repo = repository.name;
-
-      // Generates a random number to ensure the git reference isn't already taken
-      // NOTE: this is not recommended and just shows an example so it can work :)
-
-      // test
-      const branch = `new-branch-${Math.floor(Math.random() * 9999)}`;
+      const branch = `sf-initialisation-${Math.floor(Math.random() * 9999)}`;
 
       // Get current reference in Git
       const reference = await context.octokit.git.getRef({
-        repo, // the repo
-        owner, // the owner of the repo
+        repo,
+        owner,
         ref: "heads/main",
       });
       // Create a branch
@@ -452,27 +458,25 @@ The documentation was automatically generated using AI analysis of the code stru
         repo,
         owner,
         ref: `refs/heads/${branch}`,
-        sha: reference.data.object.sha, // accesses the sha from the heads/master reference we got
+        sha: reference.data.object.sha,
       });
       // create a new file
       await context.octokit.repos.createOrUpdateFileContents({
         repo,
         owner,
-        path: "path/to/your/file.md", // the path to your config file
-        message: "adds config file", // a commit message
-        content: Buffer.from("My new file is awesome!").toString("base64"),
-        // the content of your file, must be base64 encoded
-        branch, // the branch name we used when creating a Git reference
+        path: "SIMPLEFLOW.md",
+        message: "feat: SimpleFlow has been configured successfully",
+        content: Buffer.from("# SimpleFlow\nhttps://github.com/apps/simpleflow-app").toString("base64"),
+        branch,
       });
-      // create a PR from that branch with the commit of our added file
       await context.octokit.pulls.create({
         repo,
         owner,
-        title: "Adding my file!", // the title of the PR
-        head: branch, // the branch our chances are on
-        base: "master", // the branch to which you want to merge your changes
-        body: "Adds my new file!", // the body of your PR,
-        maintainer_can_modify: true, // allows maintainers to edit your app's PR
+        title: "feat: SimpleFlow has been configured successfully",
+        head: branch,
+        base: "master",
+        body: "feat: SimpleFlow has been configured successfully",
+        maintainer_can_modify: true,
       });
     }
   });
@@ -486,7 +490,7 @@ The documentation was automatically generated using AI analysis of the code stru
       const owner = context.payload.repository.owner.login;
       const repo = context.payload.repository.name;
 
-      // Use URL Lambda service for issue creation
+      // Use API Gateway service for issue creation
       logger.info('Processing !sf comment for issue creation');
       const issueData = await issueCreationInvoker({
         content: commentBody
@@ -512,12 +516,11 @@ The documentation was automatically generated using AI analysis of the code stru
       const owner = context.payload.repository.owner.login;
       const repo = context.payload.repository.name;
 
-      // Get the related issue
+      // Get the related issue and its content
       const issueNumber = context.payload.issue.number;
-      // Get the related issue description
       const issueContent = context.payload.issue.body;
 
-      // Use URL Lambda service for issue update
+      // Use API Gateway service for issue update
       logger.info('Processing !sf comment for issue update');
       const issueUpdateData = await issueUpdateInvoker({
         issue_content: issueContent,
@@ -525,7 +528,7 @@ The documentation was automatically generated using AI analysis of the code stru
       });
       logger.info('Issue update data generated successfully');
 
-      // Modify issue title
+      // Modify issue title & body
       await context.octokit.issues.update({
         owner,
         repo,
@@ -534,7 +537,6 @@ The documentation was automatically generated using AI analysis of the code stru
         body: issueUpdateData['body'],
       });
 
-      // Attach an (eye) smiely to the issue comment for marking as viewed
       await context.octokit.reactions.createForIssueComment({
         owner,
         repo,
@@ -543,10 +545,4 @@ The documentation was automatically generated using AI analysis of the code stru
       });
     }
   });
-
-  // For more information on building apps:
-  // https://probot.github.io/docs/
-
-  // To get your app running against GitHub, see:
-  // https://probot.github.io/docs/development/
 };
