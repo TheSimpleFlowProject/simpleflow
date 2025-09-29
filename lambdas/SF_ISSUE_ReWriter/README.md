@@ -2,11 +2,11 @@
 
 > AI-powered GitHub issue updater that refines and enhances existing issues based on developer feedback and comments.
 
-## 🎯 Purpose
+## Purpose
 
 The SF_ISSUE_ReWriter Lambda function intelligently updates existing GitHub issues by incorporating feedback from comments and discussions. It takes the original issue content along with developer feedback and generates an improved version that addresses concerns, clarifications, and additional requirements.
 
-## 🔧 Functionality
+## Functionality
 
 ### Core Features
 - **Issue Enhancement**: Refines existing GitHub issues based on feedback
@@ -23,7 +23,7 @@ The SF_ISSUE_ReWriter Lambda function intelligently updates existing GitHub issu
 5. Creates updated title reflecting any scope or focus changes
 6. Returns both updated components formatted for GitHub
 
-## 📋 API Specification
+## API Specification
 
 ### Endpoint
 ```
@@ -44,7 +44,7 @@ POST /issue/rewriter
 {
   "statusCode": 200,
   "body": {
-    "title": "🔐 Enhanced user authentication system with OAuth support",
+    "title": "Enhanced user authentication system with OAuth support",
     "body": "## Description\n\nImplement a comprehensive user authentication system with OAuth integration based on team feedback. This enhanced version includes social login options and improved security measures.\n\n## Updated Acceptance Criteria\n\n- [ ] Create login form with email and password fields\n- [ ] Add OAuth integration (Google, GitHub)\n- [ ] Implement secure password validation with complexity requirements\n- [ ] Add session management with configurable duration\n- [ ] Create logout functionality with session cleanup\n- [ ] Add password reset with email verification\n- [ ] Implement proper error handling and user feedback\n- [ ] Ensure WCAG compliance for accessibility"
   }
 }
@@ -58,7 +58,7 @@ POST /issue/rewriter
 }
 ```
 
-## 🚀 Requirements
+## Requirements
 
 ### AWS Services
 - **AWS Lambda**: Function runtime environment
@@ -87,33 +87,7 @@ The Lambda execution role must have the following permissions:
 - **Model**: `anthropic.claude-3-haiku-20240307-v1:0`
 - **Max Tokens**: 4096 per request
 
-## 🛠️ Installation
-
-### 1. Package Dependencies
-```bash
-# No additional Python packages required
-# Uses built-in boto3 and json libraries
-```
-
-### 2. Deploy to AWS Lambda
-```bash
-# Create deployment package
-zip -r sf-issue-rewriter.zip lambda_function.py
-
-# Deploy using AWS CLI
-aws lambda update-function-code \
-  --function-name SF_ISSUE_ReWriter \
-  --zip-file fileb://sf-issue-rewriter.zip \
-  --region eu-west-3
-```
-
-### 3. Configure Lambda Settings
-- **Runtime**: Python 3.9 or higher
-- **Timeout**: 30 seconds (recommended)
-- **Memory**: 256 MB (recommended)
-- **Environment Variables**: None required
-
-## 📊 Usage Examples
+## Usage Examples
 
 ### Example 1: Adding Security Requirements
 **Input:**
@@ -127,7 +101,7 @@ aws lambda update-function-code \
 **Output:**
 ```json
 {
-  "title": "🔐 Implement secure user authentication with OAuth and 2FA",
+  "title": "Implement secure user authentication with OAuth and 2FA",
   "body": "## Description\nImplement comprehensive user authentication system with OAuth integration and two-factor authentication for enhanced security.\n\n## Acceptance Criteria\n- [ ] Create responsive login form\n- [ ] Add password validation with complexity requirements\n- [ ] Integrate OAuth with Google authentication\n- [ ] Integrate OAuth with GitHub authentication\n- [ ] Implement two-factor authentication (TOTP)\n- [ ] Add backup codes for 2FA recovery\n- [ ] Create secure session management\n- [ ] Add proper error handling and user feedback"
 }
 ```
@@ -149,22 +123,7 @@ aws lambda update-function-code \
 }
 ```
 
-## 🔍 Monitoring
-
-### CloudWatch Metrics
-- **Invocations**: Function call frequency
-- **Duration**: Processing time per request
-- **Errors**: Failed invocations and error rates
-- **Throttles**: Rate limiting occurrences
-
-### Logging
-The function logs the following information:
-- Input processing (original issue + feedback)
-- Bedrock API calls and responses
-- Generated updated titles and bodies
-- Error conditions and exceptions
-
-## 🚨 Error Handling
+## Error Handling
 
 ### Common Issues
 1. **Missing Parameters**: Returns 404 when `issue_content` or `issue_comment` fields are missing
@@ -177,70 +136,3 @@ The function logs the following information:
 - Verify IAM permissions for Bedrock access
 - Ensure request body contains valid JSON with both required fields
 - Monitor combined input length to avoid token limits
-
-## 🔐 Security Considerations
-
-- Function processes potentially sensitive issue content and feedback
-- No input validation beyond parameter existence checking
-- Consider implementing content filtering and sanitization
-- Bedrock API calls are logged (may contain sensitive project information)
-- Ensure proper access controls at API Gateway level
-
-## 📈 Performance Optimization
-
-### Best Practices
-- Keep combined input (issue + comment) concise for faster processing
-- Implement caching for similar feedback patterns
-- Monitor token usage and optimize prompts
-- Use appropriate Lambda memory allocation
-
-### Scaling Considerations
-- Function is stateless and supports concurrent execution
-- Bedrock rate limits may affect high-volume usage
-- Consider implementing request queuing for busy periods
-
-## 🧪 Testing
-
-### Unit Testing
-```python
-import json
-from lambda_function import lambda_handler
-
-# Test valid input with both parameters
-event = {
-    'body': json.dumps({
-        'issue_content': 'Original issue description',
-        'issue_comment': '!sf Add additional requirements here'
-    })
-}
-context = {}
-response = lambda_handler(event, context)
-assert response['statusCode'] == 200
-```
-
-### Integration Testing
-- Test with various feedback types (clarifications, additions, modifications)
-- Verify output maintains GitHub issue format standards
-- Test error handling for missing parameters
-- Validate consistency of AI-generated improvements
-
-## 🎯 Use Cases
-
-### Common Feedback Scenarios
-1. **Scope Expansion**: Adding new requirements or features
-2. **Technical Clarification**: Specifying implementation details
-3. **Security Enhancement**: Adding security considerations
-4. **Performance Requirements**: Defining performance criteria
-5. **Accessibility**: Adding accessibility requirements
-6. **Error Handling**: Specifying error scenarios and handling
-
-### Integration with SimpleFlow Bot
-This function is triggered when users comment on GitHub issues with the `!sf` command, allowing real-time issue refinement based on team discussions.
-
-## 📝 Development Notes
-
-- The function processes feedback intelligently, not just appending it
-- AI model considers context and maintains issue coherence
-- Generated output preserves original issue structure while enhancing content
-- Function works best with constructive, specific feedback
-- Consider implementing feedback classification for better processing

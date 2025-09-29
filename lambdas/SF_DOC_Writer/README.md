@@ -100,25 +100,13 @@ The Lambda execution role must have the following permissions:
 # Uses built-in boto3 and json libraries
 ```
 
-### 2. Deploy to AWS Lambda
-```bash
-# Create deployment package
-zip -r sf-doc-writer.zip lambda_function.py
-
-# Deploy using AWS CLI
-aws lambda update-function-code \
-  --function-name SF_DOC_Writer \
-  --zip-file fileb://sf-doc-writer.zip \
-  --region eu-west-3
-```
-
-### 3. Configure Lambda Settings
+### 2. Configure Lambda Settings
 - **Runtime**: Python 3.9 or higher
 - **Timeout**: 120 seconds (recommended)
 - **Memory**: 512 MB (recommended)
 - **Environment Variables**: None required (uses hardcoded configuration)
 
-## 📊 Usage Examples
+## Usage Examples
 
 ### Input File Content
 ```python
@@ -146,22 +134,7 @@ def calculate_sum(numbers):
     return total
 ```
 
-## 🔍 Monitoring
-
-### CloudWatch Metrics
-- **Invocations**: Function call frequency
-- **Duration**: Processing time per request
-- **Errors**: Failed invocations and error rates
-- **Throttles**: Rate limiting occurrences
-
-### Logging
-The function logs the following information:
-- File content retrieval status
-- S3 access attempts
-- Bedrock API calls and responses
-- Error conditions and exceptions
-
-## 🚨 Error Handling
+## Error Handling
 
 ### Common Issues
 1. **S3 Access Errors**: Verify bucket permissions and object existence
@@ -175,15 +148,7 @@ The function logs the following information:
 - Ensure the S3 object key exists in the `simpleflowdata` bucket
 - Validate JSON request format
 
-## 🔐 Security Considerations
-
-- Function uses hardcoded AWS region and model configuration
-- S3 bucket access is limited to specific bucket
-- No user input validation beyond basic parameter checking
-- Consider implementing input sanitization for production use
-- Bedrock API calls include request/response logging
-
-## 📝 Development Notes
+## Development Notes
 
 - The function assumes UTF-8 encoding for all source files
 - AI-generated documentation quality depends on code complexity and context
