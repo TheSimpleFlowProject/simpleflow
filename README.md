@@ -2,20 +2,20 @@
 
 > An intelligent GitHub bot that automates code documentation, pull request analysis, and issue management using AI-powered workflows.
 
-## 🚀 Overview
+## Overview
 
 SimpleFlow is a comprehensive GitHub App built with [Probot](https://github.com/probot/probot) that leverages artificial intelligence to streamline development workflows. It automatically analyzes code changes, generates documentation, creates summaries for pull requests, and assists with issue management.
 
 ### Key Features
 
-- **🔍 Automated PR Analysis**: Analyzes changed files in pull requests and provides intelligent summaries
-- **📚 AI-Generated Documentation**: Creates comprehensive documentation for code files using AI
-- **📝 Issue Management**: Transforms comments into structured GitHub issues with proper formatting
-- **🏷️ PR Labeling**: Automatically categorizes pull requests based on content analysis
-- **☁️ AWS Integration**: Leverages AWS Lambda, S3, and Bedrock for scalable AI processing
-- **🤖 Multi-Model Support**: Supports various AI models including Anthropic Claude and local LLaMA models
+- **Automated PR Analysis**: Analyzes changed files in pull requests and provides intelligent summaries
+- **AI-Generated Documentation**: Creates comprehensive documentation for code files using AI
+- **Issue Management**: Transforms comments into structured GitHub issues with proper formatting
+- **PR Labeling**: Automatically categorizes pull requests based on content analysis
+- **AWS Integration**: Leverages AWS Lambda, S3, and Bedrock for scalable AI processing
+- **Multi-Model Support**: Supports various AI models including Anthropic Claude and local LLaMA models
 
-## 🏗️ Architecture
+## Architecture
 
 SimpleFlow consists of two main components:
 
@@ -31,7 +31,7 @@ SimpleFlow consists of two main components:
 - **SF_PR_Labeler**: Automatically labels PRs
 - **SF_DOC_Writer**: Generates comprehensive code documentation
 
-## 🛠️ Setup
+## Setup
 
 ### Prerequisites
 
@@ -55,7 +55,7 @@ npm install
 
 3. **Configure environment variables**
 
-Create a `.env` file in the `/bot` directory based on `.env.example`:
+Create a `.env` file in the `/bot` directory based the following template `.env.example`:
 ```bash
 WEBHOOK_PROXY_URL=""
 APP_ID=00000000
@@ -124,7 +124,7 @@ docker build -t simpleflow .
 docker run --env-file .env simpleflow
 ```
 
-## 📖 Usage
+## Usage
 
 ### Pull Request Analysis
 When a PR is opened, SimpleFlow automatically:
@@ -145,7 +145,7 @@ Use the `!sf` command in comments to:
 - **Create Issues**: Comment `!sf [description]` to generate structured issues
 - **Update Issues**: Use `!sf` in issue comments to refine and update issue content
 
-## 🔧 Configuration
+## Configuration
 
 ### Lambda Configuration
 Configure API Gateway endpoints in `/bot/config/lambdaConfig.js`:
@@ -169,7 +169,7 @@ module.exports = {
 SimpleFlow is based on AWS Bedrock, with a pre-selected model. 
 - **AWS Bedrock**: Anthropic Claude models
 
-## 🚀 Deployment
+## Deployment
 
 ### AWS Lambda Deployment
 Each function in `/lambdas/` can be deployed independently:
@@ -179,7 +179,7 @@ Each function in `/lambdas/` can be deployed independently:
 2. Configure webhooks to point to your deployed bot
 3. Install the app on repositories where you want SimpleFlow active
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](bot/CONTRIBUTING.md) for details on:
 - Code style and standards
@@ -193,11 +193,11 @@ We welcome contributions! Please see our [Contributing Guide](bot/CONTRIBUTING.m
 - Update documentation for API changes
 - Ensure AWS resources are properly configured
 
-## 📄 License
+## License
 
 [ISC](bot/LICENSE) © 2025 The SimpleFlow Project
 
-## 🙋‍♂️ Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/thesimpleflowproject/simpleflow/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/thesimpleflowproject/simpleflow/discussions)
