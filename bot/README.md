@@ -6,7 +6,7 @@ If you have suggestions for how SimpleFlow could be improved, or want to report 
 
 For more, check out the [Contributing Guide](CONTRIBUTING.md).
 
-# SimpleFlow Bot — bot/index.js
+# SimpleFlow Bot
 
 Overview
 - bot/index.js is the Probot entry point for the SimpleFlow application.
